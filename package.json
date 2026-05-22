@@ -1,0 +1,27 @@
+{
+  "name": "codeclean",
+  "version": "1.0.0",
+  "description": "代码清理命令行工具",
+  "private": true,
+  "bin": {
+    "codeclean": "npm-bin/codeclean.js"
+  },
+  "files": [
+    "dist/native/single-file/codeclean.exe",
+    "npm-bin/",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "powershell -NoProfile -ExecutionPolicy Bypass -File ./build-standalone.ps1",
+    "build:cli": "powershell -NoProfile -ExecutionPolicy Bypass -File ./build-cli.ps1",
+    "build:standalone": "powershell -NoProfile -ExecutionPolicy Bypass -File ./build-standalone.ps1",
+    "prepare": "powershell -NoProfile -ExecutionPolicy Bypass -File ./build-standalone.ps1",
+    "pack:local": "npm pack"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "os": [
+    "win32"
+  ]
+}

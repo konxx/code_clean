@@ -48,6 +48,8 @@ public class SourceWord {
    private String docName = "all.docx";
    private String name = "软件";
    private int sourceLength = 1700;
+   private boolean showDialogs = true;
+   private File outputDir = FileSystemView.getFileSystemView().getHomeDirectory();
    JOptionPane optionGanPane = new JOptionPane("正在生成中，请稍等", 1, -1, (Icon)null, new Object[0], (Object)null);
 
    public static InputStream getFileResource(String name) throws IOException, BadLocationException {
@@ -120,12 +122,9 @@ public class SourceWord {
    }
 
    public void start(String name, String version, final String sourceDir, List<String> fileType, int sourceLong, final String key, final boolean random) throws Throwable {
-      this.version = version;
-      this.fileTypes = fileType;
-      this.sourceLength = sourceLong;
-      this.allDocumentName = name + "-代码(前后30页).docx";
-      this.docName = name + "-代码(全量备份).docx";
-      this.name = name;
+      this.configure(name, version, fileType, sourceLong);
+      this.showDialogs = true;
+      this.outputDir = FileSystemView.getFileSystemView().getHomeDirectory();
       final JDialog dialog = this.optionGanPane.createDialog("提示");
       dialog.setLocationRelativeTo((Component)null);
       dialog.pack();
@@ -133,53 +132,11 @@ public class SourceWord {
          protected Void doInBackground() throws Exception {
             SourceWord.logger.info("开始生成文档任务");
             dialog.setVisible(true);
-            FileFilter fileFilter = new FileFilter() {
-               public boolean accept(File pathname) {
-                  String[] ignoredDirs = new String[]{"node_modules", "dist", "build", ".next", ".nuxt", ".output", "bower_components", ".cache", ".parcel-cache", ".vite", "venv", ".venv", "env", ".env", "ENV", "virtualenv", "__pycache__", ".pytest_cache", ".mypy_cache", ".tox", "pip-wheel-metadata", ".eggs", "*.egg-info", "target", "build", "out", ".gradle", ".mvn", "bin", "obj", "Debug", "Release", "packages", "vendor/bundle", ".bundle", "tmp/cache", "vendor", "pkg/mod", "target/debug", "target/release", "vendor", "composer.phar", "Pods", "Carthage", "DerivedData", ".build", ".gradle", ".externalNativeBuild", ".cxx", ".dart_tool", ".flutter-plugins", ".flutter-plugins-dependencies", ".git", ".svn", ".hg", ".bzr", ".idea", ".vscode", ".vs", ".eclipse", ".settings", "*.xcworkspace", "*.xcodeproj", "coverage", ".nyc_output", "htmlcov", ".coverage", "test-results", "junit", "allure-results", "logs", "*.log", "tmp", "temp", ".tmp", ".sass-cache", ".turbo", "public/uploads", "storage", "var/cache", "var/log"};
-                  String path = pathname.getAbsolutePath();
-
-                  for(String ignoredDir : ignoredDirs) {
-                     if (path.contains(File.separator + ignoredDir + File.separator) || path.endsWith(File.separator + ignoredDir)) {
-                        SourceWord.logger.debug("忽略目录: {}", pathname.getAbsolutePath());
-                        return false;
-                     }
-                  }
-
-                  if (pathname.isDirectory()) {
-                     return true;
-                  } else {
-                     for(String fileType : SourceWord.this.fileTypes) {
-                        if (pathname.getName().endsWith("." + fileType)) {
-                           return true;
-                        }
-                     }
-
-                     return false;
-                  }
-               }
-            };
             SourceWord.logger.info("扫描目录: {}", sourceDir);
-            List<File> fileList = FileUtil.loopFiles(sourceDir, fileFilter);
-            SourceWord.logger.info("共找到 {} 个文件", fileList.size());
+            List<File> fileList = SourceWord.this.collectSourceFiles(sourceDir);
             System.out.println("共 " + fileList.size() + " 个文件");
             SourceWord.this.optionGanPane.setMessage("共 " + fileList.size() + " 个文件，请稍等");
-            if (random) {
-               Collections.shuffle(fileList);
-               SourceWord.logger.info("已打乱文件顺序");
-            } else {
-               fileList.sort(Comparator.comparing(File::getAbsolutePath));
-               SourceWord.logger.info("已按路径排序");
-            }
-
-            if (key.equals("937599")) {
-               SourceWord.logger.info("开始生成前后30页文档: {}", SourceWord.this.allDocumentName);
-               SourceWord.this.generatePreciseDocument(fileList, SourceWord.this.allDocumentName);
-               SourceWord.logger.info("前后30页文档生成完成");
-            } else {
-               SourceWord.logger.info("开始生成全量备份文档: {}", SourceWord.this.docName);
-               SourceWord.this.scanAndGenerateSourceDocAll(fileList, SourceWord.this.docName);
-               SourceWord.logger.info("全量备份文档生成完成");
-            }
+            SourceWord.this.generateFromFileList(fileList, key, random);
 
             return null;
          }
@@ -208,6 +165,93 @@ public class SourceWord {
       };
       worker.execute();
       dialog.setVisible(true);
+   }
+
+   public String startCli(String name, String version, String sourceDir, List<String> fileType, int sourceLong, String key, boolean random) throws Exception {
+      this.configure(name, version, fileType, sourceLong);
+      this.showDialogs = false;
+      this.outputDir = (new File(System.getProperty("user.dir"))).getAbsoluteFile();
+      logger.info("开始执行命令行生成任务");
+      logger.info("扫描目录: {}", sourceDir);
+      List<File> fileList = this.collectSourceFiles(sourceDir);
+      System.out.println("扫描目录: " + sourceDir);
+      System.out.println("共 " + fileList.size() + " 个文件");
+      String outputFilePath = this.generateFromFileList(fileList, key, random);
+      System.out.println("生成完成: " + outputFilePath);
+      logger.info("命令行生成任务完成: {}", outputFilePath);
+      return outputFilePath;
+   }
+
+   private void configure(String name, String version, List<String> fileType, int sourceLong) {
+      this.version = version;
+      this.fileTypes = fileType;
+      this.sourceLength = sourceLong;
+      this.allDocumentName = name + "-代码(前后30页).docx";
+      this.docName = name + "-代码(全量备份).docx";
+      this.name = name;
+   }
+
+   private List<File> collectSourceFiles(String sourceDir) {
+      List<File> fileList = FileUtil.loopFiles(sourceDir, this.createSourceFileFilter());
+      logger.info("共找到 {} 个文件", fileList.size());
+      return fileList;
+   }
+
+   private FileFilter createSourceFileFilter() {
+      return new FileFilter() {
+         public boolean accept(File pathname) {
+            String[] ignoredDirs = new String[]{"node_modules", "dist", "build", ".next", ".nuxt", ".output", "bower_components", ".cache", ".parcel-cache", ".vite", "venv", ".venv", "env", ".env", "ENV", "virtualenv", "__pycache__", ".pytest_cache", ".mypy_cache", ".tox", "pip-wheel-metadata", ".eggs", "*.egg-info", "target", "build", "out", ".gradle", ".mvn", "bin", "obj", "Debug", "Release", "packages", "vendor/bundle", ".bundle", "tmp/cache", "vendor", "pkg/mod", "target/debug", "target/release", "vendor", "composer.phar", "Pods", "Carthage", "DerivedData", ".build", ".gradle", ".externalNativeBuild", ".cxx", ".dart_tool", ".flutter-plugins", ".flutter-plugins-dependencies", ".git", ".svn", ".hg", ".bzr", ".idea", ".vscode", ".vs", ".eclipse", ".settings", "*.xcworkspace", "*.xcodeproj", "coverage", ".nyc_output", "htmlcov", ".coverage", "test-results", "junit", "allure-results", "logs", "*.log", "tmp", "temp", ".tmp", ".sass-cache", ".turbo", "public/uploads", "storage", "var/cache", "var/log"};
+            String path = pathname.getAbsolutePath();
+
+            for(String ignoredDir : ignoredDirs) {
+               if (path.contains(File.separator + ignoredDir + File.separator) || path.endsWith(File.separator + ignoredDir)) {
+                  SourceWord.logger.debug("忽略目录: {}", pathname.getAbsolutePath());
+                  return false;
+               }
+            }
+
+            if (pathname.isDirectory()) {
+               return true;
+            } else {
+               for(String fileType : SourceWord.this.fileTypes) {
+                  if (pathname.getName().endsWith("." + fileType)) {
+                     return true;
+                  }
+               }
+
+               return false;
+            }
+         }
+      };
+   }
+
+   private String generateFromFileList(List<File> fileList, String key, boolean random) throws Exception {
+      if (random) {
+         Collections.shuffle(fileList);
+         logger.info("已打乱文件顺序");
+      } else {
+         fileList.sort(Comparator.comparing(File::getAbsolutePath));
+         logger.info("已按路径排序");
+      }
+
+      String outputFilePath;
+      if (key.equals("937599")) {
+         logger.info("开始生成前后30页文档: {}", this.allDocumentName);
+         this.generatePreciseDocument(fileList, this.allDocumentName);
+         logger.info("前后30页文档生成完成");
+         outputFilePath = this.getDesktopOutputPath(this.allDocumentName);
+      } else {
+         logger.info("开始生成全量备份文档: {}", this.docName);
+         this.scanAndGenerateSourceDocAll(fileList, this.docName);
+         logger.info("全量备份文档生成完成");
+         outputFilePath = this.getDesktopOutputPath(this.docName);
+      }
+
+      return outputFilePath;
+   }
+
+   private String getDesktopOutputPath(String fileName) {
+      return (new File(this.outputDir, fileName)).getAbsolutePath();
    }
 
    private void showPopup() {
@@ -267,7 +311,10 @@ public class SourceWord {
             doc.updatePageLayout();
             currentPageCount = doc.getPageCount();
             System.out.println("当前页数: " + currentPageCount);
-            this.optionGanPane.setMessage("当前页数: " + currentPageCount + "，请稍等");
+            if (this.showDialogs) {
+               this.optionGanPane.setMessage("当前页数: " + currentPageCount + "，请稍等");
+            }
+
             if (currentPageCount >= 60) {
                break;
             }
@@ -290,9 +337,7 @@ public class SourceWord {
          System.out.println("文件已达到60页，保存文档！");
       }
 
-      File desktopDir = FileSystemView.getFileSystemView().getHomeDirectory();
-      String desktopPath = desktopDir.getAbsolutePath();
-      doc.save(desktopPath + "/" + outputFilePath);
+      doc.save(this.getDesktopOutputPath(outputFilePath));
    }
 
    private void deleteFromPage(Document doc, int startPage, int currentPageCount, int targetPageCount) throws Exception {
@@ -341,11 +386,11 @@ public class SourceWord {
       builder.moveToHeaderFooter(1);
       builder.write(this.name + " " + this.version);
       int pageCount = doc.getPageCount();
-      File desktopDir = FileSystemView.getFileSystemView().getHomeDirectory();
-      String desktopPath = desktopDir.getAbsolutePath();
-      doc.save(desktopPath + "/" + Doc);
-      if (pageCount < 60) {
+      doc.save(this.getDesktopOutputPath(Doc));
+      if (pageCount < 60 && this.showDialogs) {
          JOptionPane.showMessageDialog((Component)null, "源码不足60页，请检查是否填写错误");
+      } else if (pageCount < 60) {
+         System.out.println("源码不足60页，请检查是否填写错误");
       }
 
    }

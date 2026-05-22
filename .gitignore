@@ -1,5 +1,7 @@
 # Build output
 /target/
+/dist/
+/tools/
 /out/
 /bin/
 
@@ -12,6 +14,10 @@
 *.jar.original
 *.war
 *.ear
+
+# Generated Word documents
+/*-代码(前后30页).docx
+/*-代码(全量备份).docx
 
 # Generated archives and temporary output
 *.zip
