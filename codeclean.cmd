@@ -4,9 +4,16 @@ setlocal
 
 set "APP_HOME=%~dp0"
 set "APP_JAR=%APP_HOME%codeclean.jar"
+set "APP_LIB=%APP_HOME%lib\*"
+
+if not exist "%APP_JAR%" (
+  set "APP_JAR=%APP_HOME%dist\codeclean\codeclean.jar"
+  set "APP_LIB=%APP_HOME%dist\codeclean\lib\*"
+)
 
 if not exist "%APP_JAR%" (
   set "APP_JAR=%APP_HOME%target\codeclean.jar"
+  set "APP_LIB=%APP_HOME%lib\*"
 )
 
 if not exist "%APP_JAR%" (
@@ -24,5 +31,5 @@ if not exist "%JAVA_EXE%" (
   set "JAVA_EXE=java.exe"
 )
 
-"%JAVA_EXE%" -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -cp "%APP_JAR%;%APP_HOME%lib\*" com.source.CodeCleanCli %*
+"%JAVA_EXE%" -Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -cp "%APP_JAR%;%APP_LIB%" com.source.CodeCleanCli %*
 exit /b %ERRORLEVEL%

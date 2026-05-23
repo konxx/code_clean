@@ -51,11 +51,15 @@ internal static class CodeCleanSingleFileLauncher
     private static string EnsureExtracted()
     {
         string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string baseDir = Path.Combine(localAppData, "codeclean", Version);
+        string baseRoot = Path.Combine(localAppData, "codeclean", Version);
+        string baseDir = Path.Combine(baseRoot, GetCurrentExecutableCacheKey());
         string appDir = Path.Combine(baseDir, "codeclean");
         string marker = Path.Combine(baseDir, ".extracted");
+        string expectedMarker = GetCurrentExecutableStamp();
 
-        if (File.Exists(marker) && File.Exists(Path.Combine(appDir, "codeclean.exe")))
+        if (File.Exists(marker)
+            && File.Exists(Path.Combine(appDir, "codeclean.exe"))
+            && string.Equals(File.ReadAllText(marker, Encoding.UTF8), expectedMarker, StringComparison.Ordinal))
         {
             return appDir;
         }
@@ -82,8 +86,20 @@ internal static class CodeCleanSingleFileLauncher
 
         ZipFile.ExtractToDirectory(zipPath, baseDir);
         File.Delete(zipPath);
-        File.WriteAllText(marker, DateTime.UtcNow.ToString("O"), Encoding.UTF8);
+        File.WriteAllText(marker, expectedMarker, Encoding.UTF8);
         return appDir;
+    }
+
+    private static string GetCurrentExecutableStamp()
+    {
+        FileInfo file = new FileInfo(Assembly.GetExecutingAssembly().Location);
+        return Version + "|" + file.Length + "|" + file.LastWriteTimeUtc.Ticks;
+    }
+
+    private static string GetCurrentExecutableCacheKey()
+    {
+        FileInfo file = new FileInfo(Assembly.GetExecutingAssembly().Location);
+        return file.Length + "_" + file.LastWriteTimeUtc.Ticks;
     }
 
     private static string QuoteArgs(string[] args)
