@@ -10,6 +10,7 @@ import com.aspose.words.LayoutEnumerator;
 import com.aspose.words.BreakType;
 import com.aspose.words.Paragraph;
 import com.aspose.words.ParagraphAlignment;
+import com.aspose.words.PageVerticalAlignment;
 import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -259,19 +260,20 @@ public class SourceWord {
    private DocumentBuilder addCoverPage(Document doc) throws Exception {
       DocumentBuilder coverBuilder = new DocumentBuilder(doc);
       coverBuilder.moveToDocumentStart();
+      coverBuilder.getPageSetup().setVerticalAlignment(PageVerticalAlignment.CENTER);
       coverBuilder.getParagraphFormat().clearFormatting();
       coverBuilder.getParagraphFormat().setAlignment(ParagraphAlignment.CENTER);
+      coverBuilder.getParagraphFormat().setSpaceBefore(0.0);
       coverBuilder.getParagraphFormat().setSpaceAfter(0.0);
       coverBuilder.getFont().setName("SimSun");
-      coverBuilder.getFont().setBold(true);
+      coverBuilder.getFont().setBold(false);
       coverBuilder.getFont().setSize(26.0);
       coverBuilder.writeln(this.name);
-      coverBuilder.getFont().setSize(20.0);
       coverBuilder.writeln("源程序");
-      coverBuilder.getFont().setBold(false);
-      coverBuilder.getFont().setSize(16.0);
+      coverBuilder.getFont().setName("Times New Roman");
       coverBuilder.writeln(this.version);
-      coverBuilder.insertBreak(BreakType.PAGE_BREAK);
+      coverBuilder.insertBreak(BreakType.SECTION_BREAK_NEW_PAGE);
+      coverBuilder.getPageSetup().setVerticalAlignment(PageVerticalAlignment.TOP);
       return coverBuilder;
    }
 
