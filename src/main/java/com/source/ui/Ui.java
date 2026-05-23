@@ -32,8 +32,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
-import jnafilechooser.api.JnaFileChooser;
-import jnafilechooser.api.JnaFileChooser.Mode;
+import li.flor.nativejfilechooser.NativeJFileChooser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,15 +83,27 @@ public class Ui extends KiftdDynamicWindow {
          }
       });
       this.选择Button.addActionListener((e) -> {
-         JnaFileChooser fileChooser = new JnaFileChooser();
-         fileChooser.setMultiSelectionEnabled(false);
-         fileChooser.setMode(Mode.Directories);
-         fileChooser.setTitle("请选择目录");
-         Window topLevelWindow = SwingUtilities.getWindowAncestor(this.jPanel);
-         boolean selected = fileChooser.showOpenDialog(topLevelWindow);
-         if (selected) {
-            File file = fileChooser.getSelectedFile();
-            this.formattedTextField3.setText(file.getPath());
+         File selectedFile = null;
+         try {
+            selectedFile = WindowsFolderChooser.chooseFolder("请选择目录");
+         } catch (Throwable ex) {
+            logger.warn("现代目录选择器调用失败，准备回退到备用选择器", ex);
+         }
+
+         if (selectedFile == null) {
+            NativeJFileChooser fileChooser = new NativeJFileChooser();
+            fileChooser.setMultiSelectionEnabled(false);
+            fileChooser.setFileSelectionMode(NativeJFileChooser.DIRECTORIES_ONLY);
+            fileChooser.setDialogTitle("请选择目录");
+            Window topLevelWindow = SwingUtilities.getWindowAncestor(this.jPanel);
+            int result = fileChooser.showOpenDialog(topLevelWindow);
+            if (result == NativeJFileChooser.APPROVE_OPTION) {
+               selectedFile = fileChooser.getSelectedFile();
+            }
+         }
+
+         if (selectedFile != null) {
+            this.formattedTextField3.setText(selectedFile.getPath());
          }
 
       });

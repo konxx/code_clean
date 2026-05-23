@@ -279,8 +279,13 @@ public class SourceWord {
       builder.getParagraphFormat().clearFormatting();
       builder.getParagraphFormat().setAlignment(ParagraphAlignment.LEFT);
       builder.getParagraphFormat().setSpaceAfter(0.0);
-      builder.getFont().clearFormatting();
-      builder.getFont().setName("Arial Narrow");
+      Font font = builder.getFont();
+      font.clearFormatting();
+      font.setName("Times New Roman");
+      font.setNameAscii("Times New Roman");
+      font.setNameBi("Times New Roman");
+      font.setNameFarEast("SimSun");
+      font.setNameOther("Times New Roman");
    }
 
    private void showPopup() {
