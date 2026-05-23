@@ -2,6 +2,7 @@ package com.source.docx;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
+import com.aspose.words.BuiltInDocumentProperties;
 import com.aspose.words.Document;
 import com.aspose.words.DocumentBuilder;
 import com.aspose.words.Font;
@@ -46,7 +47,7 @@ import org.slf4j.LoggerFactory;
 public class SourceWord {
    private static final Logger logger = LoggerFactory.getLogger(SourceWord.class);
    private String version = "V1.0";
-   private List<String> fileTypes = (List)Stream.of(".java").collect(Collectors.toList());
+   private List<String> fileTypes = Stream.of(".java").collect(Collectors.toList());
    private String allDocumentName = "前后30页.docx";
    private String docName = "all.docx";
    private String name = "软件";
@@ -257,6 +258,16 @@ public class SourceWord {
       return (new File(this.outputDir, fileName)).getAbsolutePath();
    }
 
+   private void updateDocumentProperties(Document doc) {
+      BuiltInDocumentProperties properties = doc.getBuiltInDocumentProperties();
+      properties.setTitle(this.name);
+      properties.setSubject(this.name);
+      properties.setAuthor("孔祥鑫");
+      properties.setComments("");
+      properties.setLastSavedBy("");
+      properties.setCompany("");
+   }
+
    private DocumentBuilder addCoverPage(Document doc) throws Exception {
       DocumentBuilder coverBuilder = new DocumentBuilder(doc);
       coverBuilder.moveToDocumentStart();
@@ -372,6 +383,7 @@ public class SourceWord {
          System.out.println("文件已达到61页，保存文档！");
       }
 
+      this.updateDocumentProperties(doc);
       doc.save(this.getDesktopOutputPath(outputFilePath));
    }
 
@@ -421,6 +433,7 @@ public class SourceWord {
       builder.write(this.name + " " + this.version);
       doc.updatePageLayout();
       int pageCount = doc.getPageCount();
+      this.updateDocumentProperties(doc);
       doc.save(this.getDesktopOutputPath(Doc));
       if (pageCount < 61 && this.showDialogs) {
          JOptionPane.showMessageDialog((Component)null, "源码不足60页，请检查是否填写错误");

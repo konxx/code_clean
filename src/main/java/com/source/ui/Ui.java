@@ -273,7 +273,7 @@ public class Ui extends KiftdDynamicWindow {
    }
 
    public void initUI() throws Exception {
-      FlatIntelliJLaf.install();
+      FlatIntelliJLaf.setup();
       UIManager.put("TextComponent.arc", 5);
       UIManager.put("Component.focusWidth", 1);
       UIManager.put("Component.innerFocusWidth", 1);
