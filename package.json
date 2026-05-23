@@ -1,15 +1,16 @@
 {
-  "name": "codeclean",
+  "name": "@konxfun/codeclean",
   "version": "1.0.0",
   "description": "代码清理命令行工具",
-  "private": true,
+  "private": false,
   "bin": {
     "codeclean": "npm-bin/codeclean.js"
   },
   "files": [
     "dist/native/single-file/codeclean.exe",
     "npm-bin/",
-    "README.md"
+    "README.md",
+    "CLI.md"
   ],
   "scripts": {
     "build": "powershell -NoProfile -ExecutionPolicy Bypass -File ./build-standalone.ps1",

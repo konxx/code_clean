@@ -1,10 +1,15 @@
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$CliDir = Join-Path $ProjectRoot "dist\codeclean"
+$StandaloneCliDir = Join-Path $ProjectRoot "dist\native\single-file"
+$JavaCliDir = Join-Path $ProjectRoot "dist\codeclean"
 
-if (-not (Test-Path -LiteralPath (Join-Path $CliDir "codeclean.cmd"))) {
-    throw "未找到 CLI 程序，请先执行 .\build-cli.ps1"
+$CliDir = if (Test-Path -LiteralPath (Join-Path $StandaloneCliDir "codeclean.exe")) {
+    $StandaloneCliDir
+} elseif (Test-Path -LiteralPath (Join-Path $JavaCliDir "codeclean.cmd")) {
+    $JavaCliDir
+} else {
+    throw "未找到 CLI 程序，请先执行 .\build-standalone.ps1"
 }
 
 $resolvedCliDir = (Resolve-Path -LiteralPath $CliDir).Path

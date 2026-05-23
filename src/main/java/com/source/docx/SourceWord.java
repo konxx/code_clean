@@ -7,7 +7,9 @@ import com.aspose.words.DocumentBuilder;
 import com.aspose.words.Font;
 import com.aspose.words.LayoutCollector;
 import com.aspose.words.LayoutEnumerator;
+import com.aspose.words.BreakType;
 import com.aspose.words.Paragraph;
+import com.aspose.words.ParagraphAlignment;
 import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -254,6 +256,33 @@ public class SourceWord {
       return (new File(this.outputDir, fileName)).getAbsolutePath();
    }
 
+   private DocumentBuilder addCoverPage(Document doc) throws Exception {
+      DocumentBuilder coverBuilder = new DocumentBuilder(doc);
+      coverBuilder.moveToDocumentStart();
+      coverBuilder.getParagraphFormat().clearFormatting();
+      coverBuilder.getParagraphFormat().setAlignment(ParagraphAlignment.CENTER);
+      coverBuilder.getParagraphFormat().setSpaceAfter(0.0);
+      coverBuilder.getFont().setName("SimSun");
+      coverBuilder.getFont().setBold(true);
+      coverBuilder.getFont().setSize(26.0);
+      coverBuilder.writeln(this.name);
+      coverBuilder.getFont().setSize(20.0);
+      coverBuilder.writeln("源程序");
+      coverBuilder.getFont().setBold(false);
+      coverBuilder.getFont().setSize(16.0);
+      coverBuilder.writeln(this.version);
+      coverBuilder.insertBreak(BreakType.PAGE_BREAK);
+      return coverBuilder;
+   }
+
+   private void resetBodyFormatting(DocumentBuilder builder) {
+      builder.getParagraphFormat().clearFormatting();
+      builder.getParagraphFormat().setAlignment(ParagraphAlignment.LEFT);
+      builder.getParagraphFormat().setSpaceAfter(0.0);
+      builder.getFont().clearFormatting();
+      builder.getFont().setName("Arial Narrow");
+   }
+
    private void showPopup() {
       SwingUtilities.invokeLater(() -> {
          File desktopDir = FileSystemView.getFileSystemView().getHomeDirectory();
@@ -279,9 +308,8 @@ public class SourceWord {
 
    public void generatePreciseDocument(List<File> files, String outputFilePath) throws Exception {
       Document doc = new Document(getFileResource("text.docx"));
-      DocumentBuilder builder = new DocumentBuilder(doc);
-      Font font = builder.getFont();
-      font.setName("Arial Narrow");
+      DocumentBuilder builder = this.addCoverPage(doc);
+      this.resetBodyFormatting(builder);
       doc.updatePageLayout();
       int currentPageCount = doc.getPageCount();
 
@@ -315,15 +343,15 @@ public class SourceWord {
                this.optionGanPane.setMessage("当前页数: " + currentPageCount + "，请稍等");
             }
 
-            if (currentPageCount >= 60) {
+            if (currentPageCount >= 61) {
                break;
             }
          }
       }
 
-      if (currentPageCount > 60) {
-         System.out.println("文档页数超过60页，开始从第30页删除多余内容...");
-         this.deleteFromPage(doc, 30, currentPageCount, 60);
+      if (currentPageCount > 61) {
+         System.out.println("文档页数超过61页，开始从第31页删除多余内容...");
+         this.deleteFromPage(doc, 31, currentPageCount, 61);
       }
 
       DocumentBuilder builderAfterInsert = new DocumentBuilder(doc);
@@ -331,10 +359,10 @@ public class SourceWord {
       builderAfterInsert.write(this.name + " " + this.version);
       builderAfterInsert.moveToHeaderFooter(1);
       builderAfterInsert.write(this.name + " " + this.version);
-      if (currentPageCount < 60) {
-         System.out.println("文件总页数少于60页，保存当前文档！");
+      if (currentPageCount < 61) {
+         System.out.println("文件总页数少于61页，保存当前文档！");
       } else {
-         System.out.println("文件已达到60页，保存文档！");
+         System.out.println("文件已达到61页，保存文档！");
       }
 
       doc.save(this.getDesktopOutputPath(outputFilePath));
@@ -359,9 +387,8 @@ public class SourceWord {
 
    public void scanAndGenerateSourceDocAll(List<File> fileList, String Doc) throws Exception {
       Document doc = new Document(getFileResource("text.docx"));
-      DocumentBuilder builder = new DocumentBuilder(doc);
-      Font font = builder.getFont();
-      font.setName("Arial Narrow");
+      DocumentBuilder builder = this.addCoverPage(doc);
+      this.resetBodyFormatting(builder);
       int lineCount = 0;
 
       for(File file : fileList) {
@@ -385,11 +412,12 @@ public class SourceWord {
       builder.write(this.name + " " + this.version);
       builder.moveToHeaderFooter(1);
       builder.write(this.name + " " + this.version);
+      doc.updatePageLayout();
       int pageCount = doc.getPageCount();
       doc.save(this.getDesktopOutputPath(Doc));
-      if (pageCount < 60 && this.showDialogs) {
+      if (pageCount < 61 && this.showDialogs) {
          JOptionPane.showMessageDialog((Component)null, "源码不足60页，请检查是否填写错误");
-      } else if (pageCount < 60) {
+      } else if (pageCount < 61) {
          System.out.println("源码不足60页，请检查是否填写错误");
       }
 

@@ -4,6 +4,8 @@
 
 当前界面已调整为自用版本：窗口标题为“代码清理”，默认文件后缀为 `py,sql,tsx,ts`，默认密钥为 `937599`。
 
+CLI 使用说明见 [CLI.md](./CLI.md)。
+
 ## 目录结构
 
 - `src/main/java`：应用源码，包含界面、文件扫描和文档生成逻辑。
@@ -75,6 +77,12 @@ npm install -g .
 ```
 
 npm 安装时会自动构建免 Java 单文件版本，并注册全局 `codeclean` 命令。安装后的命令会优先调用 `dist/native/single-file/codeclean.exe`。
+
+发布到 npm 后安装：
+
+```powershell
+npm install -g @konxfun/codeclean
+```
 
 ## 免 Java 运行产物
 

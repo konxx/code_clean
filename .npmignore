@@ -1,0 +1,46 @@
+# Source and local project files
+src/
+lib/
+logs/
+tools/
+target/
+dist/codeclean/
+dist/native/app-image/
+dist/native/installer/
+
+# Build and install scripts
+build.ps1
+run.ps1
+build-cli.ps1
+build-standalone.ps1
+download-packaging-tools.ps1
+install-cli.ps1
+codeclean.cmd
+
+# Local assets and metadata not needed by npm users
+logo.png
+.git/
+.gitignore
+.npmignore
+
+# Generated documents and archives
+*.docx
+*.tgz
+*.zip
+*.log
+
+# IDE and OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Keep npm package runtime files explicit
+!dist/native/single-file/codeclean.exe
+!npm-bin/
+!npm-bin/codeclean.js
+!README.md
+!CLI.md
+!package.json
